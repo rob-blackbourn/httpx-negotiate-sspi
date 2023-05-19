@@ -67,7 +67,8 @@ class HttpSspiAuth(Auth):
             request: Request
     ) -> Generator[Request, Response, None]:
         response = yield request
-        yield from self._handle_response(response)
+        if response.status_code == 401:
+            yield from self._handle_response(response)
 
     def _handle_response(
             self,
