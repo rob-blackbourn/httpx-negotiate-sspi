@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "httpx-negotiate-sspi"
+version = "0.1.0"
+description = "SSPI authentication for httpx"
+authors = ["Rob Blackbourn <rob.blackbourn@gmail.com>"]
+license = "Apache-2.0"
+readme = "README.md"
+packages = [
+    { include = "httpx_negotiate_sspi" },
+]
+repository = "https://github.com/rob-blackbourn/httpx-negotiate-sspi"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+pypiwin32 = "^223"
+httpx = "^0.24.1"
+
+[tool.poetry.dev-dependencies]
+autopep8 = "^2.0"
+pylint = "^2.17"
+mypy = "^1.3"
+
+[build-system]
+requires = ["poetry>=1.0"]
+build-backend = "poetry.masonry.api"
