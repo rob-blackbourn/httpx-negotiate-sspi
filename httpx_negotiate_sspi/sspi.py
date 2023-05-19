@@ -124,7 +124,7 @@ class HttpSspiAuth(Auth):
         sec_buffer = win32security.PySecBufferDescType()
 
         # Channel Binding Hash (aka Extended Protection for Authentication)
-        # If this is a SSL connection, we need to has the peer certificate, prepend the RFC5929 channel binding type,
+        # If this is a SSL connection, we need to hash the peer certificate, prepend the RFC5929 channel binding type,
         # and stuff it into a SEC_CHANNEL_BINDINGS structure.
         # This should be sent along in the initial handshake or Kerberos auth will fail.
         network_stream = response.extensions.get("network_stream")
@@ -160,7 +160,7 @@ class HttpSspiAuth(Auth):
             LOGGER.debug(
                 'Sending Initial Context Token - error=%s authenticated=%s',
                 err,
-                clientauth
+                clientauth.authenticated
             )
         except pywintypes.error as error:
             LOGGER.debug(
@@ -207,7 +207,7 @@ class HttpSspiAuth(Auth):
         if set_cookie is not None:
             response2.request.headers['Cookie'] = set_cookie
 
-        # Extract challeng message from server
+        # Extract challenge message from server
         challenge = [
             val[len(scheme)+1:]
             for val in response2.headers.get('WWW-Authenticate', '').split(', ')
