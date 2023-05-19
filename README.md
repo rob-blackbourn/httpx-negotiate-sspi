@@ -1,5 +1,7 @@
 # httpx-negotiate-sspi
 
+[![image](https://badge.fury.io/py/httpx-negotiate-sspi.svg)](https://badge.fury.io/py/httpx-negotiate-sspi)
+
 This is a port of
 [requests-negotiate-sspi](https://github.com/brandond/requests-negotiate-sspi)
 for [httpx](https://github.com/encode/httpx).
