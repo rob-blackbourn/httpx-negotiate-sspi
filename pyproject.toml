@@ -12,7 +12,7 @@ repository = "https://github.com/rob-blackbourn/httpx-negotiate-sspi"
 
 [tool.poetry.dependencies]
 python = "^3.8"
-pywin32 = "^223"
+pywin32 = ">=223"
 httpx = "> 0.16, < 0.27"
 
 [tool.poetry.dev-dependencies]
