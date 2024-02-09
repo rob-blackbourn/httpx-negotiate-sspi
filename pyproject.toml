@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "httpx-negotiate-sspi"
-version = "0.26.1-alpha.1"
+version = "0.26.1"
 description = "SSPI authentication for httpx"
 authors = ["Rob Blackbourn <rob.blackbourn@gmail.com>"]
 license = "Apache-2.0"
