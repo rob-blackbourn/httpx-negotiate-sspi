@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "httpx-negotiate-sspi"
-version = "0.27.0"
+version = "0.28.0"
 description = "SSPI authentication for httpx"
 authors = ["Rob Blackbourn <rob.blackbourn@gmail.com>"]
 license = "Apache-2.0"
@@ -13,7 +13,7 @@ repository = "https://github.com/rob-blackbourn/httpx-negotiate-sspi"
 [tool.poetry.dependencies]
 python = "^3.8"
 pywin32 = ">=223"
-httpx = "> 0.16, < 0.28"
+httpx = "> 0.16, <= 0.28.1"
 
 [tool.poetry.dev-dependencies]
 autopep8 = "^2.0"
