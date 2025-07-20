@@ -1,25 +1,71 @@
-[tool.poetry]
+[project]
 name = "httpx-negotiate-sspi"
 version = "0.28.1"
 description = "SSPI authentication for httpx"
-authors = ["Rob Blackbourn <rob.blackbourn@gmail.com>"]
+authors = [{name = "Rob Blackbourn", email = "rob.blackbourn@gmail.com"}]
 license = "Apache-2.0"
 readme = "README.md"
-packages = [
-    { include = "httpx_negotiate_sspi" },
+dependencies = [
+    "pywin32>=223",
+    "httpx>0.16,<0.29",
 ]
-repository = "https://github.com/rob-blackbourn/httpx-negotiate-sspi"
 
-[tool.poetry.dependencies]
-python = "^3.8"
-pywin32 = ">=223"
-httpx = "> 0.16, < 0.29"
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pylint",
+    "mypy",
+]
 
-[tool.poetry.dev-dependencies]
-autopep8 = "^2.0"
-pylint = "^2.17"
-mypy = "^1.3"
+[project.urls]
+Homepage = "https://rob-blackbourn.github.io/httpx-negotiate-sspi"
+Repository = "https://github.com/rob-blackbourn/httpx-negotiate-sspi"
+Issues = "https://github.com/rob-blackbourn/httpx-negotiate-sspi/issues"
 
 [build-system]
-requires = ["poetry>=1.0"]
-build-backend = "poetry.masonry.api"
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+# pylint
+[tool.pylint.main]
+py-version = "3.12"
+jobs = 4
+
+[tool.pylint.basic]
+good-names = ["i", "j", "k", "ex", "Run", "_"]
+bad-names = ["foo", "bar", "baz", "toto", "tutu", "tata"]
+
+[tool.pylint."messages control"]
+disable = [
+    "raw-checker-failed",
+    "bad-inline-option",
+    "locally-disabled",
+    "file-ignored",
+    "suppressed-message",
+    "useless-suppression",
+    "deprecated-pragma",
+    "use-symbolic-message-instead",
+    "use-implicit-booleaness-not-comparison-to-string",
+    "use-implicit-booleaness-not-comparison-to-zero",
+    "missing-module-docstring",
+]
+
+# pytest
+[tool.pytest.ini_options]
+testpaths = [
+    "tests",
+]
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "function"
+
+# mypy
+[tool.mypy]
+files = [ "src/httpx_negotiate_sspi" ]
+
+[[tool.mypy.overrides]]
+module = "pytest"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "pywintypes"
+ignore_missing_imports = true
