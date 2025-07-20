@@ -3,7 +3,7 @@ name = "httpx-negotiate-sspi"
 version = "0.28.1"
 description = "SSPI authentication for httpx"
 authors = [{name = "Rob Blackbourn", email = "rob.blackbourn@gmail.com"}]
-license = "Apache-2.0"
+license = {text = "Apache-2.0"}
 readme = "README.md"
 dependencies = [
     "pywin32>=223",
