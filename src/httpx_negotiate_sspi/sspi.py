@@ -6,13 +6,34 @@ import logging
 import socket
 import struct
 from typing import Generator, Optional, Tuple
+import warnings
 
 import pywintypes
 import sspi
 import sspicon
 import win32security
 
-from httpx import Auth, Request, Response, HTTPError
+
+
+try:
+    from httpx2 import Auth, Request, Response, HTTPError
+
+except ModuleNotFoundError:
+    try:
+        from httpx import Auth, Request, Response, HTTPError
+    except ModuleNotFoundError:
+        raise RuntimeError(
+            "This module requires the httpx2 package to be installed.\n"
+            "You can install it with:\n"
+            "    $ pip install httpx2\n"
+        ) from None
+    else:
+        warnings.warn(
+            "Using `httpx` with this package is deprecated; install `httpx2` instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
 
 LOGGER = logging.getLogger(__name__)
 
