@@ -1,6 +1,6 @@
 [project]
 name = "httpx-negotiate-sspi"
-version = "0.28.1"
+version = "0.28.2"
 description = "SSPI authentication for httpx"
 authors = [{name = "Rob Blackbourn", email = "rob.blackbourn@gmail.com"}]
 license = {text = "Apache-2.0"}
