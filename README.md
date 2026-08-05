@@ -4,7 +4,7 @@
 
 This is a port of
 [requests-negotiate-sspi](https://github.com/brandond/requests-negotiate-sspi)
-for [httpx](https://github.com/encode/httpx).
+for [httpx](https://github.com/encode/httpx)/[httpx2](https://github.com/pydantic/httpx2).
 
 The implmentation stays close to the original, in an attempt to make any fixes
 or updates more straighforward.
@@ -21,6 +21,20 @@ SSPI interface.
 This module supports Extended Protection for Authentication (aka Channel
 Binding Hash), which makes it usable for services that require it,
 including Active Directory Federation Services.
+
+## Installation
+
+To install you must specify either httpx or httpx2. For example:
+
+```bash
+pip install httpx-negotiate-sspi[httpx]
+```
+
+or
+
+```bash
+pip install httpx-negotiate-sspi[httpx2]
+```
 
 ## Usage
 
