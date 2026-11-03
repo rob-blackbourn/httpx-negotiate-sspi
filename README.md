@@ -71,6 +71,14 @@ package can use either Kerberos or NTLM.
   - `delegate`: Indicates that the user's credentials are to be delegated to the server.
     Default: False
 
+  - `scheme`: HTTP authentication scheme: `"auto"`, `"Negotiate"`, or `"NTLM"`.
+    Default: `"auto"` (prefer Negotiate, otherwise NTLM).
+    An explicit scheme is used only if the server advertises it; otherwise an
+    `HTTPError` is raised without attempting a different scheme. Invalid option
+    values raise `ValueError` at construction. For example, `HttpSspiAuth(scheme="NTLM")`
+    selects NTLM even when Negotiate is also offered. Selecting `"Negotiate"`
+    does not force Kerberos; SSPI may still negotiate NTLM.
+
 
 If username and password are not specified, the user's default
 credentials are used. This allows for single-sign-on to domain resources
