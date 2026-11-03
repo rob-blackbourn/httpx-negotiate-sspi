@@ -45,6 +45,11 @@ from httpx_negotiate_sspi import HttpSspiAuth
 r = httpx.get('https://iis.contoso.com', auth=HttpSspiAuth())
 ```
 
+When the server advertises both `Negotiate` and `NTLM`, `Negotiate` is preferred.
+If `Negotiate` is not offered, `NTLM` is used when available. This selects the
+HTTP authentication scheme, not the underlying mechanism: SSPI's Negotiate
+package can use either Kerberos or NTLM.
+
 ## Options
 
   - `username`: Username.  
