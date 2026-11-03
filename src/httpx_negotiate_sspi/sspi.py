@@ -6,6 +6,7 @@ import logging
 import socket
 import struct
 from typing import Generator, Optional, Tuple
+from urllib.request import parse_http_list
 import warnings
 
 import pywintypes
@@ -102,11 +103,15 @@ class HttpSspiAuth(Auth):
         if not auth_header:
             raise HTTPError("missing www-authenticate header")
 
-        auth_header = auth_header.lower()
-        if 'ntlm' in auth_header:
-            scheme = 'NTLM'
-        elif 'negotiate' in auth_header:
+        schemes = {
+            challenge.split()[0].lower()
+            for challenge in parse_http_list(auth_header)
+            if challenge.split()
+        }
+        if 'negotiate' in schemes:
             scheme = 'Negotiate'
+        elif 'ntlm' in schemes:
+            scheme = 'NTLM'
         else:
             raise HTTPError('unhandled protocol')
 
