@@ -5,7 +5,7 @@ import hashlib
 import logging
 import socket
 import struct
-from typing import Generator, Optional, Tuple
+from typing import Generator, Literal, Optional, Tuple
 from urllib.request import parse_http_list
 import warnings
 
@@ -54,7 +54,8 @@ class HttpSspiAuth(Auth):
             domain: Optional[str] = None,
             service: Optional[str] = None,
             host: Optional[str] = None,
-            delegate: bool = False
+            delegate: bool = False,
+            scheme: Literal["auto", "Negotiate", "NTLM"] = "auto"
     ) -> None:
         """Create a new Negotiate auth handler.
 
@@ -69,7 +70,13 @@ class HttpSspiAuth(Auth):
             service (Optional[str], optional): Kerberos service type for remote service principal name. Defaults to None.
             host (Optional[str], optional): Host name for service principal name. Defaults to None.
             delegate (bool, optional): Indicates the user's credentials are to be delegated to the server. Defaults to False.
+            scheme: HTTP authentication scheme. "auto" prefers Negotiate, then NTLM.
+                An explicit scheme must be advertised by the server. Defaults to "auto".
         """
+        if scheme not in ("auto", "Negotiate", "NTLM"):
+            raise ValueError('scheme must be "auto", "Negotiate", or "NTLM"')
+        self._scheme = scheme
+
         if domain is None:
             domain = '.'
 
@@ -108,7 +115,11 @@ class HttpSspiAuth(Auth):
             for challenge in parse_http_list(auth_header)
             if challenge.split()
         }
-        if 'negotiate' in schemes:
+        if self._scheme != "auto":
+            if self._scheme.lower() not in schemes:
+                raise HTTPError(f"server does not advertise requested scheme {self._scheme}")
+            scheme = self._scheme
+        elif 'negotiate' in schemes:
             scheme = 'Negotiate'
         elif 'ntlm' in schemes:
             scheme = 'NTLM'
