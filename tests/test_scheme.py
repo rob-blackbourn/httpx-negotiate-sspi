@@ -29,6 +29,7 @@ from httpx_negotiate_sspi import sspi as auth_module
     ],
 )
 def test_scheme_selection(headers, option, expected):
+    """Choose only an advertised scheme, respecting an explicit override."""
     request = auth_module.Request("GET", "https://example.test")
     response = auth_module.Response(
         401, headers=[("WWW-Authenticate", value) for value in headers],
@@ -68,6 +69,7 @@ def test_scheme_selection(headers, option, expected):
     ],
 )
 def test_unsupported_challenges(header, message):
+    """Reject missing and unsupported authentication schemes."""
     request = auth_module.Request("GET", "https://example.test")
     headers = {} if header is None else {"WWW-Authenticate": header}
     response = auth_module.Response(401, headers=headers, request=request)
@@ -87,6 +89,7 @@ def test_unsupported_challenges(header, message):
     ],
 )
 def test_explicit_scheme_must_be_advertised(option, header):
+    """Do not initialize SSPI for an unadvertised explicit scheme."""
     request = auth_module.Request("GET", "https://example.test")
     response = auth_module.Response(
         401, headers={"WWW-Authenticate": header}, request=request,
@@ -101,6 +104,7 @@ def test_explicit_scheme_must_be_advertised(option, header):
 
 @pytest.mark.parametrize("option", ["kerberos", "negotiate", "ntlm", "", None])
 def test_invalid_scheme(option):
+    """Validate the scheme at construction time."""
     with pytest.raises(ValueError, match="scheme must be"):
         HttpSspiAuth(scheme=option)
 
