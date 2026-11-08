@@ -46,7 +46,6 @@ class HttpSspiAuth(Auth):
     _host: Optional[str] = None
     _delegate: bool = False
 
-    # Preserve the public credential and SSPI configuration signature.
     # pylint: disable-next=too-many-arguments,too-many-positional-arguments
     def __init__(
             self,
