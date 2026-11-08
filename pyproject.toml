@@ -35,6 +35,7 @@ build-backend = "setuptools.build_meta"
 [tool.pylint.main]
 py-version = "3.12"
 jobs = 4
+extension-pkg-allow-list = ["win32security", "pywintypes"]
 
 [tool.pylint.basic]
 good-names = ["i", "j", "k", "ex", "Run", "_"]

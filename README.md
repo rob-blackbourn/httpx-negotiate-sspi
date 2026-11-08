@@ -45,6 +45,11 @@ from httpx_negotiate_sspi import HttpSspiAuth
 r = httpx.get('https://iis.contoso.com', auth=HttpSspiAuth())
 ```
 
+When the server advertises both `Negotiate` and `NTLM`, `Negotiate` is preferred.
+If `Negotiate` is not offered, `NTLM` is used when available. This selects the
+HTTP authentication scheme, not the underlying mechanism: SSPI's Negotiate
+package can use either Kerberos or NTLM.
+
 ## Options
 
   - `username`: Username.  
@@ -65,6 +70,14 @@ r = httpx.get('https://iis.contoso.com', auth=HttpSspiAuth())
 
   - `delegate`: Indicates that the user's credentials are to be delegated to the server.
     Default: False
+
+  - `scheme`: HTTP authentication scheme: `"auto"`, `"Negotiate"`, or `"NTLM"`.
+    Default: `"auto"` (prefer Negotiate, otherwise NTLM).
+    An explicit scheme is used only if the server advertises it; otherwise an
+    `HTTPError` is raised without attempting a different scheme. Invalid option
+    values raise `ValueError` at construction. For example, `HttpSspiAuth(scheme="NTLM")`
+    selects NTLM even when Negotiate is also offered. Selecting `"Negotiate"`
+    does not force Kerberos; SSPI may still negotiate NTLM.
 
 
 If username and password are not specified, the user's default

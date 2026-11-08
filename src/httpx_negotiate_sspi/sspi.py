@@ -5,7 +5,8 @@ import hashlib
 import logging
 import socket
 import struct
-from typing import Generator, Optional, Tuple
+from typing import Generator, Literal, Optional, Tuple
+from urllib.request import parse_http_list
 import warnings
 
 import pywintypes
@@ -27,12 +28,11 @@ except ModuleNotFoundError:
             "You can install it with:\n"
             "    $ pip install httpx2\n"
         ) from None
-    else:
-        warnings.warn(
-            "Using `httpx` with this package is deprecated; install `httpx2` instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
+    warnings.warn(
+        "Using `httpx` with this package is deprecated; install `httpx2` instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
 
 
 LOGGER = logging.getLogger(__name__)
@@ -46,6 +46,8 @@ class HttpSspiAuth(Auth):
     _host: Optional[str] = None
     _delegate: bool = False
 
+    # Preserve the public credential and SSPI configuration signature.
+    # pylint: disable-next=too-many-arguments,too-many-positional-arguments
     def __init__(
             self,
             username: Optional[str] = None,
@@ -53,7 +55,8 @@ class HttpSspiAuth(Auth):
             domain: Optional[str] = None,
             service: Optional[str] = None,
             host: Optional[str] = None,
-            delegate: bool = False
+            delegate: bool = False,
+            scheme: Literal["auto", "Negotiate", "NTLM"] = "auto"
     ) -> None:
         """Create a new Negotiate auth handler.
 
@@ -64,11 +67,20 @@ class HttpSspiAuth(Auth):
         Args:
             username (Optional[str], optional): Username. Defaults to None.
             password (Optional[str], optional): Password. Defaults to None.
-            domain (Optional[str], optional): NT domain name, '.' for local account. Defaults to None.
-            service (Optional[str], optional): Kerberos service type for remote service principal name. Defaults to None.
+            domain (Optional[str], optional): NT domain name, '.' for local account.
+                Defaults to None.
+            service (Optional[str], optional): Kerberos service type for the remote
+                service principal name. Defaults to None.
             host (Optional[str], optional): Host name for service principal name. Defaults to None.
-            delegate (bool, optional): Indicates the user's credentials are to be delegated to the server. Defaults to False.
+            delegate (bool, optional): Delegate the user's credentials to the server.
+                Defaults to False.
+            scheme: HTTP authentication scheme. "auto" prefers Negotiate, then NTLM.
+                An explicit scheme must be advertised by the server. Defaults to "auto".
         """
+        if scheme not in ("auto", "Negotiate", "NTLM"):
+            raise ValueError('scheme must be "auto", "Negotiate", or "NTLM"')
+        self._scheme = scheme
+
         if domain is None:
             domain = '.'
 
@@ -91,6 +103,8 @@ class HttpSspiAuth(Auth):
         if response.status_code == 401:
             yield from self._handle_response(response)
 
+    # Keep the handshake's connection-local state together across generator yields.
+    # pylint: disable-next=too-many-locals,too-many-branches,too-many-statements
     def _handle_response(
             self,
             response: Response
@@ -102,11 +116,19 @@ class HttpSspiAuth(Auth):
         if not auth_header:
             raise HTTPError("missing www-authenticate header")
 
-        auth_header = auth_header.lower()
-        if 'ntlm' in auth_header:
-            scheme = 'NTLM'
-        elif 'negotiate' in auth_header:
+        schemes = {
+            challenge.split()[0].lower()
+            for challenge in parse_http_list(auth_header)
+            if challenge.split()
+        }
+        if self._scheme != "auto":
+            if self._scheme.lower() not in schemes:
+                raise HTTPError(f"server does not advertise requested scheme {self._scheme}")
+            scheme = self._scheme
+        elif 'negotiate' in schemes:
             scheme = 'Negotiate'
+        elif 'ntlm' in schemes:
+            scheme = 'NTLM'
         else:
             raise HTTPError('unhandled protocol')
 
@@ -146,8 +168,8 @@ class HttpSspiAuth(Auth):
         sec_buffer = win32security.PySecBufferDescType()
 
         # Channel Binding Hash (aka Extended Protection for Authentication)
-        # If this is a SSL connection, we need to hash the peer certificate, prepend the RFC5929 channel binding type,
-        # and stuff it into a SEC_CHANNEL_BINDINGS structure.
+        # Hash the TLS peer certificate, prepend the RFC5929 channel binding type,
+        # and put it into a SEC_CHANNEL_BINDINGS structure.
         # This should be sent along in the initial handshake or Kerberos auth will fail.
         network_stream = response.extensions.get("network_stream")
         peercert = (
@@ -201,8 +223,7 @@ class HttpSspiAuth(Auth):
             final = response2.headers.get('WWW-Authenticate')
             if final is not None:
                 try:
-                    # Sometimes Windows seems to forget to prepend 'Negotiate' to the success response,
-                    # and we get just a bare chunk of base64 token. Not sure why.
+                    # Some servers omit 'Negotiate' on the final base64 token.
                     final = final.replace(scheme, '', 1).lstrip()
                     tokenbuf = win32security.PySecBufferType(
                         pkg_info['MaxToken'],
