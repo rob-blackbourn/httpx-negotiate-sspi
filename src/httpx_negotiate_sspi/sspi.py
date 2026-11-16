@@ -5,7 +5,7 @@ import hashlib
 import logging
 import socket
 import struct
-from typing import Generator, Literal, Optional, Tuple
+from typing import Generator, Literal, Optional, Tuple, cast
 from urllib.request import parse_http_list
 import warnings
 
@@ -13,8 +13,7 @@ import pywintypes
 import sspi
 import sspicon
 import win32security
-
-
+from select import select
 
 try:
     from httpx2 import Auth, Request, Response, HTTPError
@@ -102,6 +101,29 @@ class HttpSspiAuth(Auth):
         if response.status_code == 401:
             yield from self._handle_response(response)
 
+    def _discover_scheme(self, auth_header: str) -> Literal["Negotiate", "NTLM"]:
+        advertised_schemes = set()
+        for challenge in parse_http_list(auth_header):
+            challenge_parts = challenge.split()
+            if challenge_parts:
+                # Ignore any keyword or positional arguments for the scheme, if present.
+                scheme_name = challenge_parts[0].lower()
+                advertised_schemes.add(scheme_name)
+
+        if self._scheme == "auto":
+            if 'negotiate' in advertised_schemes:
+                return 'Negotiate'
+            elif 'ntlm' in advertised_schemes:
+                return 'NTLM'
+            else:
+                raise HTTPError('unhandled protocol')
+        else:
+            if self._scheme.lower() not in advertised_schemes:
+                raise HTTPError(f"server does not advertise requested scheme {self._scheme}")
+            if self._scheme == "Negotiate":
+                return "Negotiate"
+            return "NTLM"
+
     # Keep the handshake's connection-local state together across generator yields.
     # pylint: disable-next=too-many-locals,too-many-branches,too-many-statements
     def _handle_response(
@@ -115,21 +137,7 @@ class HttpSspiAuth(Auth):
         if not auth_header:
             raise HTTPError("missing www-authenticate header")
 
-        schemes = {
-            challenge.split()[0].lower()
-            for challenge in parse_http_list(auth_header)
-            if challenge.split()
-        }
-        if self._scheme != "auto":
-            if self._scheme.lower() not in schemes:
-                raise HTTPError(f"server does not advertise requested scheme {self._scheme}")
-            scheme = self._scheme
-        elif 'negotiate' in schemes:
-            scheme = 'Negotiate'
-        elif 'ntlm' in schemes:
-            scheme = 'NTLM'
-        else:
-            raise HTTPError('unhandled protocol')
+        scheme = self._discover_scheme(auth_header)
 
         if self._host is None:
             self._host = response.request.url.host
