@@ -6,8 +6,8 @@ This is a port of
 [requests-negotiate-sspi](https://github.com/brandond/requests-negotiate-sspi)
 for [httpx](https://github.com/encode/httpx)/[httpx2](https://github.com/pydantic/httpx2).
 
-The implmentation stays close to the original, in an attempt to make any fixes
-or updates more straighforward.
+The implementation stays close to the original, in an attempt to make any fixes
+or updates more straightforward.
 
 The following is taken from the README of the original package with changes to
 reflect httpx.
